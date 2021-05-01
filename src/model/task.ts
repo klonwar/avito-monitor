@@ -53,7 +53,7 @@ class Task {
     });
   }
 
-  fillSeenIds() {
+  fillSeenIds(): void {
     this.state.map((item) => {
       this.seenIds.add(item.id);
     });
@@ -82,7 +82,7 @@ class Task {
           isAppearedFromAbove = false;
           newItem.valuesChanged = Object.keys(newItem.info)
             .filter((key) => ![`photoLink`, `date`].includes(key))
-            .filter((key) => newItem[key] !== oldItem[key]);
+            .filter((key) => newItem.info[key] !== oldItem.info[key]);
           if (newItem.valuesChanged.length !== 0) {
             newItem.status = ItemStatus.CHANGED;
             this.isModified = true;
@@ -142,7 +142,7 @@ class Task {
       const dateElement = item.querySelector(`div[data-marker="item-date"]`);
       stateItem.info.date = dateElement?.innerText || ``;
 
-      stateItem.info.geoReferences = item.querySelector(`div[class*="geo-root"]`)?.innerText || ``;
+      stateItem.info.geoReferences = item.querySelector(`div[class*="geo-root"]`)?.innerText?.trim() || ``;
 
       stateItem.status = ItemStatus.PRISTINE;
       stateItem.valuesChanged = [];
