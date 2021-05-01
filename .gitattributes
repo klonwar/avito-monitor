@@ -1,1 +1,2 @@
 test-settings/__mocks__/* linguist-vendored
+*.html linguist-detectable=false
