@@ -21,7 +21,7 @@ describe(`Task`, () => {
       const onNew = jest.fn();
 
       const task = new Task({
-        link: mockLink,
+        links: [mockLink],
         subscribe: {
           onNew
         }
@@ -49,7 +49,7 @@ describe(`Task`, () => {
       const onChanged = jest.fn();
 
       const task = new Task({
-        link: mockLink,
+        links: [mockLink],
         subscribe: {
           onChanged
         }

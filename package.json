@@ -4,10 +4,10 @@
   "description": "",
   "main": "main.ts",
   "scripts": {
-    "start": "npm run build & node dist/main.js",
-    "exe": "npm run build & nexe -i ./dist/main.js -o avito-monitor.exe",
+    "start": "npm run build && node dist/main.js",
+    "exe": "npm run build && nexe -i ./dist/main.js -o avito-monitor.exe",
     "build": "babel ./src/ -d dist/ --extensions .ts,.js --copy-files --ignore '**/*.test.ts'",
-    "watch": "npm run build & node start-infinitie.js"
+    "watch": "npm run build && node start-infinitie.js"
   },
   "keywords": [],
   "author": "Klonwar",

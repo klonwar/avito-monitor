@@ -7,7 +7,6 @@
     ],
     "paths": {
       "#src/*": ["./src/*"],
-      "#root/*": ["./*"],
       "#mocks/*": ["./test-settings/__mocks__/*"]
     },
     "allowJs": true,

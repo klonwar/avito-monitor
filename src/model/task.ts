@@ -25,7 +25,7 @@ export interface StateItem {
 type SubscribeFunction = (item: StateItem, index: number) => void;
 
 interface Props {
-  link: string;
+  links: Array<string>;
   subscribe?: {
     onNew?: SubscribeFunction;
     onChanged?: SubscribeFunction;
@@ -34,7 +34,7 @@ interface Props {
 
 
 class Task {
-  private link: string;
+  private links: Array<string>;
   private state: Array<StateItem>;
   private initialized = false;
   private seenIds = new Set();
@@ -46,7 +46,7 @@ class Task {
   isModified = false;
 
   constructor(props: Props) {
-    this.link = props.link;
+    this.links = props.links;
     this.onNew = props.subscribe?.onNew || (() => {
     });
     this.onChanged = props.subscribe?.onChanged || (() => {
@@ -81,7 +81,7 @@ class Task {
         if (oldItem) {
           isAppearedFromAbove = false;
           newItem.valuesChanged = Object.keys(newItem.info)
-            .filter((key) => ![`photoLink`, `date`].includes(key))
+            .filter((key) => ![`photoLink`, `date`, `geoReferences`].includes(key))
             .filter((key) => newItem.info[key] !== oldItem.info[key]);
           if (newItem.valuesChanged.length !== 0) {
             newItem.status = ItemStatus.CHANGED;
@@ -110,44 +110,45 @@ class Task {
   private async requestUrl(): Promise<Array<StateItem>> {
     const result: Array<StateItem> = [];
 
-    const response = await (await fetch(this.link)).text();
+    for (const link of this.links) {
+      const response = await (await fetch(link)).text();
 
-    const root = parse(response).querySelector(`div[class*="items-items"]`);
-    let elements;
+      const root = parse(response).querySelector(`div[class*="items-items"]`);
+      let elements;
 
-    try {
-      elements = root.querySelectorAll(`div[data-marker="item"]`);
-    } catch (e) {
-      console.error(`Your ip is banned`);
-      throw e;
+      try {
+        elements = root.querySelectorAll(`div[data-marker="item"]`);
+      } catch (e) {
+        throw new Error(`Your ip is banned`);
+      }
+
+      elements.map((item) => {
+        const stateItem = {
+          info: {}
+        } as StateItem;
+
+        stateItem.id = parseInt(item.getAttribute(`data-item-id`));
+
+        const linkElement = item.querySelector(`a[title]`);
+        stateItem.info.title = linkElement.getAttribute(`title`);
+        stateItem.info.link = ORIGIN + linkElement.getAttribute(`href`);
+
+        const imageElement = linkElement.querySelector(`img[class*="photo-slider-image"]`);
+        stateItem.info.photoLink = imageElement?.getAttribute(`src`) || ``;
+
+        const priceElement = item.querySelector(`span[class*="price-text"]`);
+        stateItem.info.price = priceElement.innerText;
+
+        const dateElement = item.querySelector(`div[data-marker="item-date"]`);
+        stateItem.info.date = dateElement?.innerText || ``;
+
+        stateItem.info.geoReferences = item.querySelector(`div[class*="geo-root"]`)?.innerText?.trim() || ``;
+
+        stateItem.status = ItemStatus.PRISTINE;
+        stateItem.valuesChanged = [];
+        result.push(stateItem);
+      });
     }
-
-    elements.map((item) => {
-      const stateItem = {
-        info: {}
-      } as StateItem;
-
-      stateItem.id = parseInt(item.getAttribute(`data-item-id`));
-
-      const linkElement = item.querySelector(`a[title]`);
-      stateItem.info.title = linkElement.getAttribute(`title`);
-      stateItem.info.link = ORIGIN + linkElement.getAttribute(`href`);
-
-      const imageElement = linkElement.querySelector(`img[class*="photo-slider-image"]`);
-      stateItem.info.photoLink = imageElement?.getAttribute(`src`) || ``;
-
-      const priceElement = item.querySelector(`span[class*="price-text"]`);
-      stateItem.info.price = priceElement.innerText;
-
-      const dateElement = item.querySelector(`div[data-marker="item-date"]`);
-      stateItem.info.date = dateElement?.innerText || ``;
-
-      stateItem.info.geoReferences = item.querySelector(`div[class*="geo-root"]`)?.innerText?.trim() || ``;
-
-      stateItem.status = ItemStatus.PRISTINE;
-      stateItem.valuesChanged = [];
-      result.push(stateItem);
-    });
 
     return result;
   }

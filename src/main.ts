@@ -1,12 +1,12 @@
 import {readConsole} from "./util/read-console";
 import chalk from "chalk";
-import gainLink from "./core/gain-link";
+import gainLinks from "./core/gain-links";
 import Task from "./model/task";
 import {waitFor} from "#src/util/wait-for";
 import sendOnWebhook from "#src/core/discord/send-on-webhook";
 import webhookDataConstructor from "#src/core/discord/webhook-data-constructor";
 import checkMemory from "#src/core/check-memory";
-import pjson from "#root/package.json";
+import pjson from "#src/../package.json";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require(`dotenv`).config();
@@ -14,10 +14,12 @@ require(`dotenv`).config();
 (async () => {
   console.log(`- Avito Monitor v${pjson.version} -`);
 
+
   // Инициализация
-  const link = await gainLink();
+  const links = await gainLinks();
+  links.map((item) => console.log(`-@@ ${chalk.blue(item)}`));
   const task = new Task({
-    link,
+    links,
     subscribe: {
       onNew: (item) => {
         sendOnWebhook(webhookDataConstructor(item));
