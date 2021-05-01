@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "./temp-dist/",
+    "lib": [
+      "esnext"
+    ],
+    "paths": {
+      "#src/*": ["./src/*"],
+      "#root/*": ["./*"],
+      "#mocks/*": ["./test-settings/__mocks__/*"]
+    },
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "module": "ESNext",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "compilerOptions": {
+      "target": "esnext",
+      "module": "commonjs"
+    }
+  }
+}
