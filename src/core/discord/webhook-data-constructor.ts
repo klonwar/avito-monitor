@@ -1,5 +1,6 @@
 import {MessageEmbed, WebhookMessageOptions} from "discord.js";
 import {ItemStatus, StateItem} from "#src/model/task";
+import pjson from "#src/../package.json";
 
 const bold = (str: string): string => `**${str}**`;
 
@@ -8,7 +9,8 @@ const webhookDataConstructor = (
 ): WebhookMessageOptions => {
   const {
     status,
-    valuesChanged = []
+    valuesChanged = [],
+    listLink
   } = stateItem;
   const {
     title = ``,
@@ -37,7 +39,7 @@ const webhookDataConstructor = (
       "url": `https://www.avito.ru/rossiya/`,
     },
     footer: {
-      "text": `Avito Monitor v.${process.env.VERSION} by Klonwar`,
+      "text": `Avito Monitor v.${pjson.version} by Klonwar`,
       "icon_url": `https://yt3.ggpht.com/a/AATXAJwG3nq_4r5UAFXdIzmRyK3oA71_klw8QALm00Hz8A=s900-c-k-c0xffffffff-no-rj-mo`
     }
   };
@@ -69,7 +71,7 @@ const webhookDataConstructor = (
 
   embed.fields.push({
     name: `Links`,
-    value: `[All results](${process.env.LINK}) | [Direct link](${link})`,
+    value: `[All results](${listLink}) | [Direct link](${link})`,
     inline: false
   });
 

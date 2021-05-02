@@ -8,7 +8,7 @@ import webhookDataConstructor from "#src/core/discord/webhook-data-constructor";
 import checkMemory from "#src/core/check-memory";
 import pjson from "#src/../package.json";
 import readProxyList from "#src/core/proxy/read-proxy-list";
-import IpBanError from "#src/core/errors";
+import {TimeoutError} from "#src/core/errors";
 
 require(`dotenv`).config();
 
@@ -22,8 +22,8 @@ require(`dotenv`).config();
   } catch (e) {
     throw new Error(`Check .env file`);
   }
-  links.map((item) => console.log(`-@@ ${chalk.blue(item)}`));
 
+  console.log();
   // Поиск прокси
 
   let proxy;
@@ -47,13 +47,22 @@ require(`dotenv`).config();
     }
   });
 
-  console.log(`-@ Initializing`);
-  await task.init();
+  console.log(chalk.bgBlueBright.black(`-@ Initializing...`));
+  while (!task.initialized) {
+    try {
+      await task.init();
+    } catch (e) {
+      if (!(e instanceof TimeoutError)) {
+        console.error(e.stack);
+      }
+    }
+  }
 
   // Бесконечный цикл сравнения состояния
   for (; ;) {
     try {
-      console.log(`-@ Updating...`);
+      console.log();
+      console.log(chalk.bgMagentaBright.black(`-@ Updating...`));
       await task.update();
       console.log(`-@ Fetched in ${(task.lastIterationTime / 1000).toFixed(3)}s`);
       console.log(`-@ Waiting for ${process.env.DELAY}ms`);
@@ -65,10 +74,11 @@ require(`dotenv`).config();
         throw e;
       }
 
-      console.error(chalk.red(e.trace || e.message));
-      console.log(`-@ Waiting for ${process.env.DELAY}ms`);
-      await waitFor(parseInt(process.env.DELAY));
-
+      if (!(e instanceof TimeoutError)) {
+        console.error(chalk.red(e.trace || e.message));
+        console.log(`-@ Waiting for ${process.env.DELAY}ms`);
+        await waitFor(parseInt(process.env.DELAY));
+      }
     }
   }
 

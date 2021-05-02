@@ -5,7 +5,10 @@ interface Status {
 export const timeoutPromise = (
   promiseCreator: (status: Status) => Promise<any>,
   timeout = 10000
-): Promise<any> => {
+): Promise<{
+  res: any;
+  comment: string;
+}> => {
   const promiseStatus: Status = {active: true};
   return new Promise((resolve) => {
     const timeoutId = setTimeout(() => {

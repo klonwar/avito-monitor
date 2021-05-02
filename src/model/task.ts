@@ -1,10 +1,11 @@
 import fetch from "node-fetch";
 import {parse} from "node-html-parser";
-import {ORIGIN} from "#src/config";
+import {ORIGIN, TIMEOUT} from "#src/config";
 import {verifyProxy} from "#src/core/proxy/verify-proxy";
 import chalk from "chalk";
 import {proxyFetchOptions} from "#src/core/proxy/proxy-fetch-options";
-import IpBanError from "#src/core/errors";
+import {IpBanError, TimeoutError} from "#src/core/errors";
+import {timeoutPromise} from "#src/core/util/timeout-promise";
 
 export enum ItemStatus {
   PRISTINE,
@@ -16,6 +17,7 @@ export interface StateItem {
   id: number;
   status: ItemStatus;
   valuesChanged: Array<string>;
+  listLink: string
   info: {
     title: string;
     price: string;
@@ -45,7 +47,7 @@ class Task {
     active: string
   };
   private state: Array<StateItem>;
-  private initialized = false;
+  initialized = false;
   private seenIds = new Set();
 
   private readonly onNew: SubscribeFunction;
@@ -73,8 +75,9 @@ class Task {
   }
 
   async init(): Promise<void> {
-    await this.turnOnDifferentProxy();
-    this.state = await this.requestUrl();
+    if (!this.proxy.active)
+      await this.turnOnDifferentProxy();
+    this.state = await this.requestUrls();
     this.fillSeenIds();
 
     this.initialized = true;
@@ -86,13 +89,9 @@ class Task {
 
     let isAppearedFromAbove = true;
     const startTime = Date.now();
-    let newState: Array<StateItem>;
 
-    try {
-      newState = await this.requestUrl();
-    } catch (e) {
-      return await this.update();
-    }
+    const newState = await this.requestUrls();
+
     this.isModified = false;
     newState.map((newItem, newItemIndex) => {
         const oldIndex = this.state.findIndex((oldItem) => oldItem.id === newItem.id);
@@ -127,14 +126,27 @@ class Task {
     this.lastIterationTime = Date.now() - startTime;
   }
 
-  private async requestUrl(): Promise<Array<StateItem>> {
+  private async requestUrls(): Promise<Array<StateItem>> {
     const result: Array<StateItem> = [];
 
     for (const link of this.links) {
-      const response = await (await fetch(link, proxyFetchOptions(
-        this.proxy.active,
-        ORIGIN
-      ))).text();
+      console.log(chalk.blue(`--> Request to ${link}`));
+
+      const timeoutPromiseResponse = (await timeoutPromise(async () => {
+        const response = await fetch(link, proxyFetchOptions(
+          this.proxy.active,
+          ORIGIN
+        ));
+        return await response.text();
+      }, TIMEOUT));
+
+      if (!timeoutPromiseResponse.res) {
+        console.error(chalk.red(timeoutPromiseResponse.comment));
+        await this.turnOnDifferentProxy();
+        throw new TimeoutError();
+      }
+
+      const response = timeoutPromiseResponse.res;
 
       const root = parse(response).querySelector(`div[class*="items-items"]`);
       let elements;
@@ -149,7 +161,8 @@ class Task {
 
       elements.map((item) => {
         const stateItem = {
-          info: {}
+          info: {},
+          listLink: link,
         } as StateItem;
 
         stateItem.id = parseInt(item.getAttribute(`data-item-id`));
@@ -179,6 +192,7 @@ class Task {
   }
 
   async turnOnDifferentProxy(): Promise<void> {
+    console.log(`-@ Looking for a valid proxy`);
     let time = new Date().getTime();
 
     if (!this.proxy.list)
@@ -199,18 +213,18 @@ class Task {
       const response = await verifyProxy(`${item}`, `https://www.avito.ru/voronezh`, 10000);
 
       if (response.valid) {
-        console.log(chalk.green(`-V [${response.comment}] ${item}`));
+        console.log(chalk.green(`--V [${response.comment}] ${item}`));
         this.proxy.active = item;
         break;
       }
 
-      console.log(chalk.red(`-X [${response.comment}] ${item}`));
+      console.log(chalk.red(`--X [${response.comment}] ${item}`));
 
     }
 
     time = new Date().getTime() - time;
     if (Math.floor(time * 100) > 1) {
-      console.log(`-@ [${chalk.magenta(`PROXY`)}] ${(time / 1000).toFixed(3)}s`);
+      console.log(`-@@ [${chalk.magenta(`PROXY`)}] ${(time / 1000).toFixed(3)}s`);
     }
   }
 }
