@@ -2,10 +2,11 @@ import fs from "fs";
 import path from "path";
 import appRoot from "app-root-path";
 
-const readFile = async (
+const readFile = async <T = any>(
   pathname: string,
-  handler = (str: string) => str
-): Promise<string> => {
+  handler: (t: string) => T
+    = (str) => (str as unknown) as T
+): Promise<ReturnType<typeof handler>> => {
   const dirPathname = path.dirname(pathname);
 
   if (!fs.existsSync(dirPathname)) {

@@ -1,6 +1,6 @@
 import Task, {ItemStatus} from "./task";
 import {mockLink} from "#mocks/variables";
-import readFile from "#src/util/read-file";
+import readFile from "#src/core/util/read-file";
 import chalk from "chalk";
 jest.mock(`node-fetch`, () => require(`fetch-mock-jest`).sandbox());
 import fetchTemp from "node-fetch";

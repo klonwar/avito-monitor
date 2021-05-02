@@ -36,21 +36,20 @@
     "nexe": "^3.3.7",
     "ts-jest": "^26.4.4",
     "ts-paths-to-babel-alias": "^0.1.0",
-    "typescript": "^4.2.4"
+    "typescript": "^4.2.4",
+    "@types/fetch-mock": "^7.3.3"
   },
   "dependencies": {
-    "@types/fetch-mock": "^7.3.3",
+
     "app-root-path": "^3.0.0",
     "chalk": "^4.1.1",
     "discord.js": "^12.5.3",
     "dotenv": "^8.2.0",
     "forever-monitor": "^3.0.3",
+    "https-proxy-agent": "^5.0.0",
     "node-fetch": "^2.6.1",
     "node-html-parser": "^3.2.0",
     "npm": "^7.11.1",
     "valid-url": "^1.0.9"
-  },
-  "resolutions": {
-    "node-fetch": "^2.6.1"
   }
 }

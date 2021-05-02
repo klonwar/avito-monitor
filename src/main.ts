@@ -1,25 +1,42 @@
-import {readConsole} from "./util/read-console";
+import {readConsole} from "./core/util/read-console";
 import chalk from "chalk";
 import gainLinks from "./core/gain-links";
 import Task from "./model/task";
-import {waitFor} from "#src/util/wait-for";
+import {waitFor} from "#src/core/util/wait-for";
 import sendOnWebhook from "#src/core/discord/send-on-webhook";
 import webhookDataConstructor from "#src/core/discord/webhook-data-constructor";
 import checkMemory from "#src/core/check-memory";
 import pjson from "#src/../package.json";
+import readProxyList from "#src/core/proxy/read-proxy-list";
+import IpBanError from "#src/core/errors";
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 require(`dotenv`).config();
 
 (async () => {
   console.log(`- Avito Monitor v${pjson.version} -`);
 
-
-  // Инициализация
-  const links = await gainLinks();
+  // Найдем ссылки
+  let links;
+  try {
+    links = await gainLinks();
+  } catch (e) {
+    throw new Error(`Check .env file`);
+  }
   links.map((item) => console.log(`-@@ ${chalk.blue(item)}`));
+
+  // Поиск прокси
+
+  let proxy;
+  try {
+    proxy = await readProxyList(process.env.PROXY);
+  } catch (e) {
+    console.log(chalk.yellow(`-@@ No proxy list loaded`));
+  }
+
+
   const task = new Task({
     links,
+    proxy,
     subscribe: {
       onNew: (item) => {
         sendOnWebhook(webhookDataConstructor(item));
@@ -47,9 +64,11 @@ require(`dotenv`).config();
       if (e.message === `restart`) {
         throw e;
       }
+
       console.error(chalk.red(e.trace || e.message));
       console.log(`-@ Waiting for ${process.env.DELAY}ms`);
       await waitFor(parseInt(process.env.DELAY));
+
     }
   }
 

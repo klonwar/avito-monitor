@@ -1,5 +1,5 @@
 import validUrl from "valid-url";
-import {readConsole} from "../util/read-console";
+import {readConsole} from "./util/read-console";
 
 const gainLinks = async (): Promise<Array<string>> => {
 
