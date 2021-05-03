@@ -55,7 +55,6 @@ describe(`Task`, () => {
         }
       });
 
-      // console.log(firstResponse);
 
       fetch.getOnce(mockLink, () => firstResponse);
 
@@ -68,7 +67,6 @@ describe(`Task`, () => {
 
       expect(onChanged.mock.calls[0][0][`id`]).toBe(2020852365);
       expect(onChanged.mock.calls[0][0][`status`]).toBe(ItemStatus.CHANGED);
-
     });
 
   });

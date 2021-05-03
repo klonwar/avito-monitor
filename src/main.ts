@@ -8,7 +8,7 @@ import webhookDataConstructor from "#src/core/discord/webhook-data-constructor";
 import checkMemory from "#src/core/check-memory";
 import pjson from "#src/../package.json";
 import readProxyList from "#src/core/proxy/read-proxy-list";
-import {TimeoutError} from "#src/core/errors";
+import {IpBanError, TimeoutError} from "#src/core/errors";
 
 require(`dotenv`).config();
 
@@ -39,10 +39,14 @@ require(`dotenv`).config();
     proxy,
     subscribe: {
       onNew: (item) => {
-        sendOnWebhook(webhookDataConstructor(item));
+        if (process.env.WEBHOOK_ON_NEW !== `false`) {
+          sendOnWebhook(webhookDataConstructor(item));
+        }
       },
       onChanged: (item) => {
-        sendOnWebhook(webhookDataConstructor(item));
+        if (process.env.WEBHOOK_ON_CHANGE !== `false`) {
+          sendOnWebhook(webhookDataConstructor(item));
+        }
       },
     }
   });
@@ -74,7 +78,7 @@ require(`dotenv`).config();
         throw e;
       }
 
-      if (!(e instanceof TimeoutError)) {
+      if (!(e instanceof TimeoutError) && !(e instanceof IpBanError)) {
         console.error(chalk.red(e.trace || e.message));
         console.log(`-@ Waiting for ${process.env.DELAY}ms`);
         await waitFor(parseInt(process.env.DELAY));

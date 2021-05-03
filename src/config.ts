@@ -1,3 +1,3 @@
 export const ORIGIN = `https://avito.ru`;
 
-export const TIMEOUT = process.env.DELAY;
+export const TIMEOUT = parseInt(process.env.DELAY);

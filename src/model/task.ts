@@ -103,9 +103,11 @@ class Task {
             .filter((key) => ![`photoLink`, `date`, `geoReferences`].includes(key))
             .filter((key) => newItem.info[key] !== oldItem.info[key]);
           if (newItem.valuesChanged.length !== 0) {
-            newItem.status = ItemStatus.CHANGED;
-            this.isModified = true;
-            this.onChanged(newItem, newItemIndex);
+            if (newItem.status === ItemStatus.PRISTINE) {
+              newItem.status = ItemStatus.CHANGED;
+              this.isModified = true;
+              this.onChanged(newItem, newItemIndex);
+            }
           } else {
             newItem.status = ItemStatus.PRISTINE;
           }
@@ -154,7 +156,7 @@ class Task {
       try {
         elements = root.querySelectorAll(`div[data-marker="item"]`);
       } catch (e) {
-        console.error(chalk.red(e.message));
+        console.error(`--X Ip ban detected`);
         await this.turnOnDifferentProxy();
         throw new IpBanError();
       }
