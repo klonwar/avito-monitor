@@ -29,7 +29,7 @@ const webhookDataConstructor = (
   const embed: MessageEmbed | any = {
     title: title.replace(/Объявление/, ``) + ` - ${price}`,
     url: link,
-    color: 48340,
+    color: (status === ItemStatus.NEW) ? 48340 : 16770304,
     fields: [],
     thumbnail: {
       "url": photoLink
