@@ -110,7 +110,7 @@ class Task {
             .filter((key) => newItem.info[key] !== oldItem.info[key])
             .map((key) => ({
               key,
-              previousValue: oldItem[key]
+              previousValue: oldItem.info[key]
             }));
 
           if (newItem.valuesChanged.length !== 0) {
