@@ -1,10 +1,10 @@
 import Task, {ItemStatus} from "./task";
 import {mockLink} from "#mocks/variables";
 import readFile from "#src/core/util/read-file";
-import chalk from "chalk";
-jest.mock(`node-fetch`, () => require(`fetch-mock-jest`).sandbox());
 import fetchTemp from "node-fetch";
 import {FetchMockStatic} from "fetch-mock";
+
+jest.mock(`node-fetch`, () => require(`fetch-mock-jest`).sandbox());
 const fetch = (fetchTemp as unknown) as (typeof fetchTemp) & FetchMockStatic;
 
 describe(`Task`, () => {

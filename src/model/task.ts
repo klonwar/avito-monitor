@@ -16,7 +16,10 @@ export enum ItemStatus {
 export interface StateItem {
   id: number;
   status: ItemStatus;
-  valuesChanged: Array<string>;
+  valuesChanged: Array<{
+    key: string
+    previousValue: string;
+  }>;
   listLink: string
   info: {
     title: string;
@@ -99,9 +102,17 @@ class Task {
 
         if (oldItem) {
           isAppearedFromAbove = false;
+          // todo настройки оповещений
+          // Пока отслеживаем только изменения цены
+
           newItem.valuesChanged = Object.keys(newItem.info)
-            .filter((key) => ![`photoLink`, `date`, `geoReferences`].includes(key))
-            .filter((key) => newItem.info[key] !== oldItem.info[key]);
+            .filter((key) => [`price`].includes(key))
+            .filter((key) => newItem.info[key] !== oldItem.info[key])
+            .map((key) => ({
+              key,
+              previousValue: oldItem[key]
+            }));
+
           if (newItem.valuesChanged.length !== 0) {
             if (newItem.status === ItemStatus.PRISTINE) {
               newItem.status = ItemStatus.CHANGED;

@@ -1,12 +1,27 @@
-import {MessageEmbed, WebhookMessageOptions} from "discord.js";
+import {MessageEmbed, MessageEmbedFooter, WebhookMessageOptions} from "discord.js";
 import {ItemStatus, StateItem} from "#src/model/task";
 import pjson from "#src/../package.json";
+import {WEBHOOK_CHANGED_COLOR, WEBHOOK_NEW_COLOR} from "#src/config";
 
 const bold = (str: string): string => `**${str}**`;
 
+const striked = (str: string): string => `~~${str}~~`;
+
+interface FixedMessageEmbedFooter extends MessageEmbedFooter {
+  icon_url: string
+}
+
+interface FixedMessageEmbed extends Partial<MessageEmbed> {
+  footer: FixedMessageEmbedFooter
+}
+
+interface FixedWebhookMessageOptions  extends WebhookMessageOptions{
+  embeds: Array<FixedMessageEmbed>
+}
+
 const webhookDataConstructor = (
   stateItem: StateItem
-): WebhookMessageOptions => {
+): FixedWebhookMessageOptions => {
   const {
     status,
     valuesChanged = [],
@@ -22,14 +37,10 @@ const webhookDataConstructor = (
 
   const space = ` ‏‏‎`;
 
-  const boidIfChanged = (value) => (valuesChanged.includes(value))
-    ? bold(stateItem.info[value])
-    : stateItem.info[value];
-
-  const embed: MessageEmbed | any = {
+  const embed: FixedMessageEmbed = {
     title: title.replace(/Объявление/, ``) + ` - ${price}`,
     url: link,
-    color: (status === ItemStatus.NEW) ? 48340 : 16770304,
+    color: (status === ItemStatus.NEW) ? WEBHOOK_NEW_COLOR : WEBHOOK_CHANGED_COLOR,
     fields: [],
     thumbnail: {
       "url": photoLink
@@ -54,17 +65,26 @@ const webhookDataConstructor = (
   });
 
   if (price) {
-    embed.fields.push({
-      name: `Price`,
-      value: ` ` + boidIfChanged(`price`) + `\n\n`,
-      inline: true
-    });
+    const changedInfo = valuesChanged.find((item) => item.key === `price`);
+    if (!changedInfo) {
+      embed.fields.push({
+        name: `Price`,
+        value: ` ` + price + `\n\n`,
+        inline: true
+      });
+    } else {
+      embed.fields.push({
+        name: `Price`,
+        value: ` ${bold(price)} (${striked(changedInfo.previousValue)})\n`,
+        inline: true
+      });
+    }
   }
 
   if (geoReferences) {
     embed.fields.push({
       name: `Geo`,
-      value: ` ` + boidIfChanged(`geoReferences`) + `\n\n`,
+      value: ` ` + geoReferences + `\n\n`,
       inline: true
     });
   }
