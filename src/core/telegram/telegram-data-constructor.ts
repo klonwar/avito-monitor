@@ -4,7 +4,7 @@ import {WEBHOOK_CHANGED_COLOR, WEBHOOK_NEW_COLOR} from "#src/config";
 
 const bold = (str: string): string => `**${str}**`;
 
-const striked = (str: string): string => `~~${str}~~`;
+const striked = (str: string): string => `~${str}~`;
 
 const telegramDataConstructor = (
   stateItem: StateItem
