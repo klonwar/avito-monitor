@@ -51,7 +51,7 @@ const telegramDataConstructor = (
     if (!changedInfo) {
       text += price + `\n`;
     } else {
-      text += `${bold(price)} (${striked(changedInfo.previousValue)})` + `\n`;
+      text += `${bold(price)} \\(${striked(changedInfo.previousValue)}\\)` + `\n`;
     }
 
     text += `\n`;
