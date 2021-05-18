@@ -45,9 +45,13 @@ class TelegramClient extends TelegramBot {
   async sendAll(item: StateItem): Promise<void> {
     let time = new Date().getTime();
     await Promise.allSettled(this.chatIds.map((chatId) => (async () => {
-      await this.sendMessage(chatId, telegramDataConstructor(item), {
-        parse_mode: `Markdown`
-      });
+      try {
+        await this.sendMessage(chatId, telegramDataConstructor(item), {
+          parse_mode: `MarkdownV2`
+        });
+      } catch (e) {
+        console.error(e.stack);
+      }
     })()));
     time = new Date().getTime() - time;
     console.log(`-@@ [${chalk.red(`TELEGRAM`)}] ${(time / 1000).toFixed(3)}s`);

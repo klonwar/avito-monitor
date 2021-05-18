@@ -1,6 +1,6 @@
 import {ItemStatus, StateItem} from "#src/model/task";
-import pjson from "#src/../package.json";
-import {WEBHOOK_CHANGED_COLOR, WEBHOOK_NEW_COLOR} from "#src/config";
+
+const escapeMarkdown = (str: string): string => str.replace(/([[\]()`>#+\-=|{}*_~\\.!])/g, `\\$1`);
 
 const bold = (str: string): string => `**${str}**`;
 
@@ -17,7 +17,6 @@ const telegramDataConstructor = (
   const {
     title = ``,
     price = ``,
-    photoLink = ``,
     geoReferences = ``,
     link = ``
   } = stateItem.info;
@@ -31,7 +30,7 @@ const telegramDataConstructor = (
   let text = ``;
 
   text += `[${
-    title.replace(/Объявление/, ``) + ` - ${price}`
+    escapeMarkdown(title.replace(/Объявление/, ``) + ` - ${price}`)
   }](${
     link
   })` + `\n`;
@@ -42,7 +41,7 @@ const telegramDataConstructor = (
       ? `❗️`
       : `✏`
   } ${bold(`Type`)}` + `\n`;
-  text += `#${typeTag}` + `\n`;
+  text += escapeMarkdown(`#${typeTag}`) + `\n`;
   text += `\n`;
 
   if (price) {
@@ -60,12 +59,12 @@ const telegramDataConstructor = (
 
   if (geoReferences) {
     text += `📍 ${bold(`Geo`)}` + `\n`;
-    text += geoReferences + `\n`;
+    text += escapeMarkdown(geoReferences) + `\n`;
 
     text += `\n`;
   }
   text += `🔗 ${bold(`Links`)}` + `\n`;
-  text += `[All results](${listLink}) | [Direct link](${link})` + `\n`;
+  text += `[All results](${listLink}) \\| [Direct link](${link})` + `\n`;
 
   return text;
 };
