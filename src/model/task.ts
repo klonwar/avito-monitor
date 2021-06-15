@@ -77,13 +77,25 @@ class Task {
     });
   }
 
-  async init(): Promise<void> {
+  private async inner_init(): Promise<void> {
     if (!this.proxy.active)
       await this.turnOnDifferentProxy();
     this.state = await this.requestUrls();
     this.fillSeenIds();
 
     this.initialized = true;
+  }
+
+  async init(): Promise<void> {
+    while (!this.initialized) {
+      try {
+        await this.inner_init();
+      } catch (e) {
+        if (!(e instanceof TimeoutError)) {
+          console.error(e.stack);
+        }
+      }
+    }
   }
 
   async update(): Promise<void> {
@@ -102,8 +114,6 @@ class Task {
 
         if (oldItem) {
           isAppearedFromAbove = false;
-          // todo настройки оповещений
-          // Пока отслеживаем только изменения цены
 
           newItem.valuesChanged = Object.keys(newItem.info)
             .filter((key) => [`price`].includes(key))

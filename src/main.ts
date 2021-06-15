@@ -1,16 +1,19 @@
 import chalk from "chalk";
-import gainLinks from "./core/gain-links";
+import gainLinks from "./core/util/gain-links";
 import Task, {StateItem} from "./model/task";
 import {waitFor} from "#src/core/util/wait-for";
-import sendOnWebhook from "#src/core/discord/send-on-webhook";
-import webhookDataConstructor from "#src/core/discord/webhook-data-constructor";
+import sendOnWebhook from "#src/core/bots/discord/send-on-webhook";
+import webhookDataConstructor from "#src/core/bots/discord/webhook-data-constructor";
 import checkMemory from "#src/core/check-memory";
 import pjson from "#src/../package.json";
 import readProxyList from "#src/core/proxy/read-proxy-list";
 import {IpBanError, TimeoutError} from "#src/core/errors";
-import TelegramClient from "#src/core/telegram/telegram-client";
+import TelegramClient from "#src/core/bots/telegram/telegram-client";
+import {EnvError} from "#src/core/errors";
+import isRegexException from "#src/core/util/is-regex-exception";
 
 require(`dotenv`).config();
+
 
 (async () => {
     console.log(`- Avito Monitor v${pjson.version} -`);
@@ -20,17 +23,27 @@ require(`dotenv`).config();
     try {
       links = await gainLinks();
     } catch (e) {
-      throw new Error(`Check .env file`);
+      throw new EnvError(`Links cannot be parsed. Check .env file`);
     }
 
     console.log();
 
     // Поиск прокси
-    let proxy;
+    let proxy: Array<string> = null;
     try {
       proxy = await readProxyList(process.env.PROXY);
     } catch (e) {
       console.log(chalk.yellow(`-@@ No proxy list loaded`));
+    }
+
+    // Регулярное выражение для исключения результатов
+    let exceptRegex: RegExp = null;
+    if (process.env.EXCEPT) {
+      try {
+        exceptRegex = new RegExp(process.env.EXCEPT);
+      } catch (e) {
+        console.log(chalk.yellow(`-@@ EXCEPT regexp cannot be parsed`));
+      }
     }
 
     // Инициализация ботов
@@ -44,14 +57,18 @@ require(`dotenv`).config();
       await telegramClient.init();
     }
 
+    // Отправка информации о конкретном предложении
     const sendMessage = (item: StateItem) => {
-      if (isDiscord) {
-        sendOnWebhook(webhookDataConstructor(item));
-      } else if (isTelegram) {
-        telegramClient.sendAll(item);
+      if (!isRegexException(item, exceptRegex)) {
+        if (isDiscord) {
+          sendOnWebhook(webhookDataConstructor(item));
+        } else if (isTelegram) {
+          telegramClient.sendAll(item);
+        }
       }
     };
 
+    // Действия при изменениях в списке товаров
     const onNew = (item: StateItem) => {
       if (process.env.MESSAGE_ON_NEW !== `false`) {
         sendMessage(item);
@@ -74,16 +91,9 @@ require(`dotenv`).config();
       }
     });
 
+    // Нам необходимо инициализировать бота
     console.log(chalk.bgBlueBright.black(`-@ Initializing...`));
-    while (!task.initialized) {
-      try {
-        await task.init();
-      } catch (e) {
-        if (!(e instanceof TimeoutError)) {
-          console.error(e.stack);
-        }
-      }
-    }
+    await task.init();
 
     // Бесконечный цикл сравнения состояния
     for (; ;) {
@@ -110,12 +120,10 @@ require(`dotenv`).config();
     }
 
   }
-)
-().catch((err) => {
+)().catch((err) => {
   if (err.message === `restart`) {
     process.exit(2);
   }
-
 
   console.error(`\n` + err.stack);
 

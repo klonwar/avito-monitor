@@ -9,3 +9,9 @@ export class TimeoutError extends Error {
     super(`Timeout`);
   }
 }
+
+export class EnvError extends Error {
+  constructor(message?: string) {
+    super(message);
+  }
+}
