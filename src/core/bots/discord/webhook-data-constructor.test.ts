@@ -1,4 +1,4 @@
-import webhookDataConstructor from "#src/core/discord/webhook-data-constructor";
+import webhookDataConstructor from "#src/core/bots/discord/webhook-data-constructor";
 import {ItemStatus} from "#src/model/task";
 import {mockLink} from "#mocks/variables";
 import {WEBHOOK_CHANGED_COLOR, WEBHOOK_NEW_COLOR} from "#src/config";

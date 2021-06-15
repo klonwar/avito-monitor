@@ -1,6 +1,6 @@
 import {MessageEmbed, MessageEmbedFooter, WebhookMessageOptions} from "discord.js";
 import {ItemStatus, StateItem} from "#src/model/task";
-import pjson from "#src/../package.json";
+import pjson from "../../../../package.json";
 import {WEBHOOK_CHANGED_COLOR, WEBHOOK_NEW_COLOR} from "#src/config";
 
 const bold = (str: string): string => `**${str}**`;

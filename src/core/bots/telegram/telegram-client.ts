@@ -2,7 +2,7 @@ import TelegramBot from "node-telegram-bot-api";
 import chalk from "chalk";
 import writeFile from "#src/core/util/write-file";
 import readFile from "#src/core/util/read-file";
-import telegramDataConstructor from "#src/core/telegram/telegram-data-constructor";
+import telegramDataConstructor from "#src/core/bots/telegram/telegram-data-constructor";
 import {StateItem} from "#src/model/task";
 
 class TelegramClient extends TelegramBot {
