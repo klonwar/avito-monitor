@@ -40,7 +40,7 @@ require(`dotenv`).config();
     let exceptRegex: RegExp = null;
     if (process.env.EXCEPT) {
       try {
-        exceptRegex = new RegExp(process.env.EXCEPT);
+        exceptRegex = new RegExp(process.env.EXCEPT, `i`);
       } catch (e) {
         console.log(chalk.yellow(`-@@ EXCEPT regexp cannot be parsed`));
       }

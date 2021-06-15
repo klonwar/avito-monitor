@@ -17,7 +17,7 @@ describe(`Regex filters correctly`, () => {
       geoReferences: `mock`
     }
   };
-  const exceptRegex = new RegExp(`1050[ ]?ti`);
+  const exceptRegex = new RegExp(`1050[ ]?ti`, `i`);
 
   test(`On simple item`, () => {
     expect(isRegexException(mockItem, exceptRegex)).toBeFalsy();
