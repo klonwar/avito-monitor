@@ -6,11 +6,22 @@ import chalk from "chalk";
 import {proxyFetchOptions} from "#src/core/proxy/proxy-fetch-options";
 import {IpBanError, TimeoutError} from "#src/core/errors";
 import {timeoutPromise} from "#src/core/util/timeout-promise";
+import {waitFor} from "#src/core/util/wait-for";
 
 export enum ItemStatus {
   PRISTINE,
   NEW,
   CHANGED
+}
+
+export enum BotStatus {
+  NOT_INITIALIZED = `Not initialized`,
+  INITIALIZING = `Initializing`,
+  INITIALIZED = `Initialized`,
+  UPDATING = `Updating`,
+  UPDATED = `Updated`,
+  WAITING = `Waiting`,
+  PROXY_SEARCH = `Looking for a valid proxy`,
 }
 
 export interface StateItem {
@@ -44,6 +55,7 @@ interface Props {
 
 
 class Task {
+  public botStatus: BotStatus[] = [BotStatus.NOT_INITIALIZED];
   private readonly links: Array<string>;
   private readonly proxy: {
     list: Array<string>
@@ -71,6 +83,20 @@ class Task {
     });
   }
 
+  private pushBotStatus(...status: BotStatus[]): void {
+    this.botStatus.push(...status);
+  }
+
+  private setBotStatus(...status: BotStatus[]): void {
+    this.botStatus.length = 0;
+    this.pushBotStatus(...status);
+  }
+
+  private removeBotStatus(...status: BotStatus[]): void {
+    const newStatus = this.botStatus.filter((item) => !status.includes(item));
+    this.setBotStatus(...newStatus);
+  }
+
   fillSeenIds(): void {
     this.state.map((item) => {
       this.seenIds.add(item.id);
@@ -87,6 +113,7 @@ class Task {
   }
 
   async init(): Promise<void> {
+    this.setBotStatus(BotStatus.INITIALIZING);
     while (!this.initialized) {
       try {
         await this.inner_init();
@@ -96,11 +123,14 @@ class Task {
         }
       }
     }
+    this.setBotStatus(BotStatus.INITIALIZED);
   }
 
   async update(): Promise<void> {
     if (!this.initialized)
       throw new Error(`Task is not initialized`);
+
+    this.setBotStatus(BotStatus.UPDATING);
 
     let isAppearedFromAbove = true;
     const startTime = Date.now();
@@ -147,6 +177,13 @@ class Task {
     this.state = newState;
     this.fillSeenIds();
     this.lastIterationTime = Date.now() - startTime;
+    this.setBotStatus(BotStatus.UPDATED);
+  }
+
+  async wait(): Promise<void> {
+    this.setBotStatus(BotStatus.WAITING);
+    await waitFor(parseInt(process.env.DELAY));
+    this.removeBotStatus(BotStatus.WAITING);
   }
 
   private async requestUrls(): Promise<Array<StateItem>> {
@@ -221,6 +258,7 @@ class Task {
     if (!this.proxy.list)
       return;
 
+    this.pushBotStatus(BotStatus.PROXY_SEARCH);
     const startIndex = (
       this.proxy.list.findIndex(
         (item) => item === this.proxy.active
@@ -249,6 +287,7 @@ class Task {
     if (Math.floor(time * 100) > 1) {
       console.log(`-@@ [${chalk.magenta(`PROXY`)}] ${(time / 1000).toFixed(3)}s`);
     }
+    this.removeBotStatus(BotStatus.PROXY_SEARCH);
   }
 }
 

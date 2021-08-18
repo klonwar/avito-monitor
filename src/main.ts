@@ -1,15 +1,13 @@
 import chalk from "chalk";
 import gainLinks from "./core/util/gain-links";
 import Task, {StateItem} from "./model/task";
-import {waitFor} from "#src/core/util/wait-for";
 import sendOnWebhook from "#src/core/bots/discord/send-on-webhook";
 import webhookDataConstructor from "#src/core/bots/discord/webhook-data-constructor";
 import checkMemory from "#src/core/check-memory";
 import pjson from "#src/../package.json";
 import readProxyList from "#src/core/proxy/read-proxy-list";
-import {IpBanError, TimeoutError} from "#src/core/errors";
+import {EnvError, IpBanError, TimeoutError} from "#src/core/errors";
 import TelegramClient from "#src/core/bots/telegram/telegram-client";
-import {EnvError} from "#src/core/errors";
 import isRegexException from "#src/core/util/is-regex-exception";
 
 require(`dotenv`).config();
@@ -91,6 +89,10 @@ require(`dotenv`).config();
       }
     });
 
+    if (isTelegram) {
+      telegramClient.setBotStatus(task.botStatus);
+    }
+
     // Нам необходимо инициализировать бота
     console.log(chalk.bgBlueBright.black(`-@ Initializing...`));
     await task.init();
@@ -101,9 +103,10 @@ require(`dotenv`).config();
         console.log();
         console.log(chalk.bgMagentaBright.black(`-@ Updating...`));
         await task.update();
+
         console.log(`-@ Fetched in ${(task.lastIterationTime / 1000).toFixed(3)}s`);
         console.log(`-@ Waiting for ${process.env.DELAY}ms`);
-        await waitFor(parseInt(process.env.DELAY));
+        await task.wait();
 
         checkMemory(parseInt(process.env.MEMORY_EDGE) || 200);
       } catch (e) {
@@ -114,7 +117,7 @@ require(`dotenv`).config();
         if (!(e instanceof TimeoutError) && !(e instanceof IpBanError)) {
           console.error(chalk.red(e.trace || e.message));
           console.log(`-@ Waiting for ${process.env.DELAY}ms`);
-          await waitFor(parseInt(process.env.DELAY));
+          await task.wait();
         }
       }
     }
