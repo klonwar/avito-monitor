@@ -14,7 +14,7 @@ export enum ItemStatus {
   CHANGED
 }
 
-export enum BotStatus {
+export enum BotStatusEnum {
   NOT_INITIALIZED = `Not initialized`,
   INITIALIZING = `Initializing`,
   INITIALIZED = `Initialized`,
@@ -22,6 +22,11 @@ export enum BotStatus {
   UPDATED = `Updated`,
   WAITING = `Waiting`,
   PROXY_SEARCH = `Looking for a valid proxy`,
+}
+
+export interface BotStatus {
+  status: BotStatusEnum,
+  start: Date
 }
 
 export interface StateItem {
@@ -55,7 +60,10 @@ interface Props {
 
 
 class Task {
-  public botStatus: BotStatus[] = [BotStatus.NOT_INITIALIZED];
+  public botStatus: BotStatus[] = [{
+    status: BotStatusEnum.NOT_INITIALIZED,
+    start: new Date()
+  }];
   private readonly links: Array<string>;
   private readonly proxy: {
     list: Array<string>
@@ -83,18 +91,22 @@ class Task {
     });
   }
 
-  private pushBotStatus(...status: BotStatus[]): void {
-    this.botStatus.push(...status);
+  private pushBotStatus(...status: BotStatusEnum[]): void {
+    this.botStatus.push(...status.map((item) => ({
+      status: item,
+      start: new Date()
+    })));
   }
 
-  private setBotStatus(...status: BotStatus[]): void {
+  private setBotStatus(...status: BotStatusEnum[]): void {
     this.botStatus.length = 0;
     this.pushBotStatus(...status);
   }
 
-  private removeBotStatus(...status: BotStatus[]): void {
-    const newStatus = this.botStatus.filter((item) => !status.includes(item));
-    this.setBotStatus(...newStatus);
+  private removeBotStatus(...status: BotStatusEnum[]): void {
+    const newStatus = this.botStatus.filter((item) => !status.includes(item.status));
+    this.botStatus.length = 0;
+    this.botStatus.push(...newStatus);
   }
 
   fillSeenIds(): void {
@@ -113,7 +125,7 @@ class Task {
   }
 
   async init(): Promise<void> {
-    this.setBotStatus(BotStatus.INITIALIZING);
+    this.setBotStatus(BotStatusEnum.INITIALIZING);
     while (!this.initialized) {
       try {
         await this.inner_init();
@@ -123,14 +135,14 @@ class Task {
         }
       }
     }
-    this.setBotStatus(BotStatus.INITIALIZED);
+    this.setBotStatus(BotStatusEnum.INITIALIZED);
   }
 
   async update(): Promise<void> {
     if (!this.initialized)
       throw new Error(`Task is not initialized`);
 
-    this.setBotStatus(BotStatus.UPDATING);
+    this.setBotStatus(BotStatusEnum.UPDATING);
 
     let isAppearedFromAbove = true;
     const startTime = Date.now();
@@ -177,13 +189,13 @@ class Task {
     this.state = newState;
     this.fillSeenIds();
     this.lastIterationTime = Date.now() - startTime;
-    this.setBotStatus(BotStatus.UPDATED);
+    this.setBotStatus(BotStatusEnum.UPDATED);
   }
 
   async wait(): Promise<void> {
-    this.setBotStatus(BotStatus.WAITING);
+    this.setBotStatus(BotStatusEnum.WAITING);
     await waitFor(parseInt(process.env.DELAY));
-    this.removeBotStatus(BotStatus.WAITING);
+    this.removeBotStatus(BotStatusEnum.WAITING);
   }
 
   private async requestUrls(): Promise<Array<StateItem>> {
@@ -258,7 +270,7 @@ class Task {
     if (!this.proxy.list)
       return;
 
-    this.pushBotStatus(BotStatus.PROXY_SEARCH);
+    this.pushBotStatus(BotStatusEnum.PROXY_SEARCH);
     const startIndex = (
       this.proxy.list.findIndex(
         (item) => item === this.proxy.active
@@ -287,7 +299,7 @@ class Task {
     if (Math.floor(time * 100) > 1) {
       console.log(`-@@ [${chalk.magenta(`PROXY`)}] ${(time / 1000).toFixed(3)}s`);
     }
-    this.removeBotStatus(BotStatus.PROXY_SEARCH);
+    this.removeBotStatus(BotStatusEnum.PROXY_SEARCH);
   }
 }
 

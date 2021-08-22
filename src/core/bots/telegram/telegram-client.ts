@@ -5,6 +5,7 @@ import readFile from "#src/core/util/read-file";
 import telegramDataConstructor from "#src/core/bots/telegram/telegram-data-constructor";
 import {BotStatus, StateItem} from "#src/model/task";
 import os from "os";
+import moment from "moment";
 
 class TelegramClient extends TelegramBot {
   private readonly chatIdsFile = `db/chat-ids.db`;
@@ -64,12 +65,28 @@ class TelegramClient extends TelegramBot {
           msg.chat.id,
           `Not ready yet`
         );
-      else
+      else {
+        const lastDate = this.botStatus[this.botStatus.length - 1].start;
+
+        const deltas = {
+          d: moment().diff(lastDate, `days`),
+          h: moment().diff(lastDate, `hours`),
+          m: moment().diff(lastDate, `minutes`),
+          s: moment().diff(lastDate, `seconds`),
+          ms: moment().diff(lastDate, `milliseconds`),
+        };
+        const timeLabel = Object.entries(deltas).find(([, value]) => {
+          if (value) {
+            return true;
+          }
+        }).reverse().join(``);
+
         await this.sendMessage(
           msg.chat.id,
-          this.botStatus.map((item) => `_${item}_`).join(` / `),
+          this.botStatus.map((item) => `_${item.status}_`).join(` / `) + ` \\- ${timeLabel}`,
           {parse_mode: `MarkdownV2`}
         );
+      }
     });
   }
 
