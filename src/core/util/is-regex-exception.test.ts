@@ -1,6 +1,6 @@
-import {ItemStatus, StateItem} from "#src/model/task";
 
 import isRegexException from "#src/core/util/is-regex-exception";
+import {ItemStatus, StateItem} from "#src/core/interfaces/state-item";
 
 describe(`Regex filters correctly`, () => {
   const mockItem: StateItem = {

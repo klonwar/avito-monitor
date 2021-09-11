@@ -6,6 +6,7 @@
       "esnext"
     ],
     "paths": {
+      "#root/*": ["./*"],
       "#src/*": ["./src/*"],
       "#mocks/*": ["./test-settings/__mocks__/*"]
     },

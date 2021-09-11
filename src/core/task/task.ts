@@ -1,51 +1,14 @@
 import fetch from "node-fetch";
-import {parse} from "node-html-parser";
 import {ORIGIN, TIMEOUT} from "#src/config";
 import {verifyProxy} from "#src/core/proxy/verify-proxy";
 import chalk from "chalk";
 import {proxyFetchOptions} from "#src/core/proxy/proxy-fetch-options";
-import {IpBanError, TimeoutError} from "#src/core/errors";
+import {TimeoutError} from "#src/core/errors";
 import {timeoutPromise} from "#src/core/util/timeout-promise";
 import {waitFor} from "#src/core/util/wait-for";
-
-export enum ItemStatus {
-  PRISTINE,
-  NEW,
-  CHANGED
-}
-
-export enum BotStatusEnum {
-  NOT_INITIALIZED = `Not initialized`,
-  INITIALIZING = `Initializing`,
-  INITIALIZED = `Initialized`,
-  UPDATING = `Updating`,
-  UPDATED = `Updated`,
-  WAITING = `Waiting`,
-  PROXY_SEARCH = `Looking for a valid proxy`,
-}
-
-export interface BotStatus {
-  status: BotStatusEnum,
-  start: Date
-}
-
-export interface StateItem {
-  id: number;
-  status: ItemStatus;
-  valuesChanged: Array<{
-    key: string
-    previousValue: string;
-  }>;
-  listLink: string
-  info: {
-    title: string;
-    price: string;
-    date: string;
-    link: string;
-    photoLink: string;
-    geoReferences: string;
-  }
-}
+import {ItemStatus, StateItem} from "#src/core/interfaces/state-item";
+import {BotStatus, BotStatusEnum} from "#src/core/interfaces/bot-status";
+import {afterRequest} from "#src/custom-logic/fetch-actions";
 
 type SubscribeFunction = (item: StateItem, index: number) => void;
 
@@ -199,6 +162,7 @@ class Task {
   }
 
   private async requestUrls(): Promise<Array<StateItem>> {
+    // changed
     const result: Array<StateItem> = [];
 
     for (const link of this.links) {
@@ -220,44 +184,7 @@ class Task {
 
       const response = timeoutPromiseResponse.res;
 
-      const root = parse(response).querySelector(`div[class*="items-items"]`);
-      let elements;
-
-      try {
-        elements = root.querySelectorAll(`div[data-marker="item"]`);
-      } catch (e) {
-        console.error(`--X Ip ban detected`);
-        await this.turnOnDifferentProxy();
-        throw new IpBanError();
-      }
-
-      elements.map((item) => {
-        const stateItem = {
-          info: {},
-          listLink: link,
-        } as StateItem;
-
-        stateItem.id = parseInt(item.getAttribute(`data-item-id`));
-
-        const linkElement = item.querySelector(`a[title]`);
-        stateItem.info.title = linkElement.getAttribute(`title`);
-        stateItem.info.link = ORIGIN + linkElement.getAttribute(`href`);
-
-        const imageElement = linkElement.querySelector(`img[class*="photo-slider-image"]`);
-        stateItem.info.photoLink = imageElement?.getAttribute(`src`) || ``;
-
-        const priceElement = item.querySelector(`span[class*="price-text"]`);
-        stateItem.info.price = priceElement.innerText;
-
-        const dateElement = item.querySelector(`div[data-marker="item-date"]`);
-        stateItem.info.date = dateElement?.innerText || ``;
-
-        stateItem.info.geoReferences = item.querySelector(`div[class*="geo-root"]`)?.innerText?.trim() || ``;
-
-        stateItem.status = ItemStatus.PRISTINE;
-        stateItem.valuesChanged = [];
-        result.push(stateItem);
-      });
+      await afterRequest({response, result, listLink: link}, {turnOnDifferentProxy: this.turnOnDifferentProxy});
     }
 
     return result;
@@ -283,6 +210,7 @@ class Task {
         continue;
       }
 
+      // todo
       const response = await verifyProxy(`${item}`, `https://www.avito.ru/voronezh`, 10000);
 
       if (response.valid) {

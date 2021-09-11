@@ -1,4 +1,5 @@
-import {ItemStatus, StateItem} from "#src/model/task";
+import {ItemStatus, StateItem} from "#src/core/interfaces/state-item";
+import {TELEGRAM_CONFIG} from "#src/config";
 
 const escapeMarkdown = (str: string): string => str.replace(/([[\]()`>#+\-=|{}*_~\\.!])/g, `\\$1`);
 
@@ -15,7 +16,6 @@ const telegramDataConstructor = (
     listLink
   } = stateItem;
   const {
-    title = ``,
     price = ``,
     geoReferences = ``,
     link = ``
@@ -30,7 +30,7 @@ const telegramDataConstructor = (
   let text = ``;
 
   text += `[${
-    escapeMarkdown(title.replace(/Объявление/, ``) + ` - ${price}`)
+    escapeMarkdown(TELEGRAM_CONFIG.createTitle(stateItem))
   }](${
     link
   })` + `\n`;

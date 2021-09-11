@@ -1,7 +1,6 @@
 import {MessageEmbed, MessageEmbedFooter, WebhookMessageOptions} from "discord.js";
-import {ItemStatus, StateItem} from "#src/model/task";
-import pjson from "../../../../package.json";
-import {WEBHOOK_CHANGED_COLOR, WEBHOOK_NEW_COLOR} from "#src/config";
+import {ItemStatus, StateItem} from "#src/core/interfaces/state-item";
+import {WEBHOOK_CONFIG} from "#src/config";
 
 const bold = (str: string): string => `**${str}**`;
 
@@ -15,7 +14,7 @@ interface FixedMessageEmbed extends Partial<MessageEmbed> {
   footer: FixedMessageEmbedFooter
 }
 
-interface FixedWebhookMessageOptions  extends WebhookMessageOptions{
+interface FixedWebhookMessageOptions extends WebhookMessageOptions {
   embeds: Array<FixedMessageEmbed>
 }
 
@@ -28,7 +27,6 @@ const webhookDataConstructor = (
     listLink
   } = stateItem;
   const {
-    title = ``,
     price = ``,
     photoLink = ``,
     geoReferences = ``,
@@ -38,21 +36,18 @@ const webhookDataConstructor = (
   const space = ` ‏‏‎`;
 
   const embed: FixedMessageEmbed = {
-    title: title.replace(/Объявление/, ``) + ` - ${price}`,
+    title: WEBHOOK_CONFIG.createTitle(stateItem),
     url: link,
-    color: (status === ItemStatus.NEW) ? WEBHOOK_NEW_COLOR : WEBHOOK_CHANGED_COLOR,
+    color: (status === ItemStatus.NEW) ? WEBHOOK_CONFIG.newItemColor : WEBHOOK_CONFIG.changedColor,
     fields: [],
     thumbnail: {
       "url": photoLink
     },
     author: {
-      "name": `Avito`,
-      "url": `https://www.avito.ru/rossiya/`,
+      "name": WEBHOOK_CONFIG.header.text,
+      "url": WEBHOOK_CONFIG.header.link,
     },
-    footer: {
-      "text": `Avito Monitor v.${pjson.version} by Klonwar`,
-      "icon_url": `https://yt3.ggpht.com/a/AATXAJwG3nq_4r5UAFXdIzmRyK3oA71_klw8QALm00Hz8A=s900-c-k-c0xffffffff-no-rj-mo`
-    }
+    footer: WEBHOOK_CONFIG.footer
   };
 
   embed.fields.push({
@@ -96,7 +91,7 @@ const webhookDataConstructor = (
   });
 
   return {
-    username: `Avito Notification`,
+    username: WEBHOOK_CONFIG.username,
     embeds: [embed],
   };
 };

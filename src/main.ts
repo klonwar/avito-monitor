@@ -1,20 +1,20 @@
-import chalk from "chalk";
-import gainLinks from "./core/util/gain-links";
-import Task, {StateItem} from "./model/task";
-import sendOnWebhook from "#src/core/bots/discord/send-on-webhook";
-import webhookDataConstructor from "#src/core/bots/discord/webhook-data-constructor";
-import checkMemory from "#src/core/check-memory";
-import pjson from "#src/../package.json";
 import readProxyList from "#src/core/proxy/read-proxy-list";
-import {EnvError, IpBanError, TimeoutError} from "#src/core/errors";
-import TelegramClient from "#src/core/bots/telegram/telegram-client";
+import chalk from "chalk";
+import Task from "#src/core/task/task";
 import isRegexException from "#src/core/util/is-regex-exception";
+import checkMemory from "#src/core/util/check-memory";
+import {EnvError, IpBanError, TimeoutError} from "#src/core/errors";
+import {StateItem} from "#src/core/interfaces/state-item";
+import gainLinks from "#src/core/util/gain-links";
+import {BOT_NAME} from "#src/config";
+import {Bot} from "#src/core/bots/bot";
+import {TelegramBot} from "#src/core/bots/telegram/telegram-bot";
+import {DiscordBot} from "#src/core/bots/discord/discord-bot";
 
 require(`dotenv`).config();
 
-
 (async () => {
-    console.log(`- Avito Monitor v${pjson.version} -`);
+    console.log(BOT_NAME);
 
     // Найдем ссылки
     let links;
@@ -46,22 +46,24 @@ require(`dotenv`).config();
 
     // Инициализация ботов
     const isDiscord = process.env.BOT_SOURCE === undefined || process.env.BOT_SOURCE.toUpperCase() === `DISCORD`;
-
     const isTelegram = !process.env.BOT_SOURCE || process.env.BOT_SOURCE.toUpperCase() === `TELEGRAM`;
-    let telegramClient: TelegramClient;
 
+    let bot: Bot;
     if (isTelegram) {
-      telegramClient = new TelegramClient(process.env.TELEGRAM_TOKEN, {polling: true});
-      await telegramClient.init();
+      bot = new TelegramBot();
+    } else if (isDiscord) {
+      bot = new DiscordBot();
+    } else {
+      console.log(chalk.yellow(`-@@ No bot source selected`));
     }
 
     // Отправка информации о конкретном предложении
     const sendMessage = (item: StateItem) => {
       if (!isRegexException(item, exceptRegex)) {
-        if (isDiscord) {
-          sendOnWebhook(webhookDataConstructor(item));
-        } else if (isTelegram) {
-          telegramClient.sendAll(item);
+        if (bot) {
+          bot.sendMessage(item);
+        } else {
+          console.log(chalk.yellow(`-@@ No bot source selected, can't send message`));
         }
       }
     };
@@ -79,7 +81,6 @@ require(`dotenv`).config();
       }
     };
 
-
     const task = new Task({
       links,
       proxy,
@@ -89,9 +90,7 @@ require(`dotenv`).config();
       }
     });
 
-    if (isTelegram) {
-      telegramClient.setBotStatus(task.botStatus);
-    }
+    bot.setBotStatus(task.botStatus);
 
     // Нам необходимо инициализировать бота
     console.log(chalk.bgBlueBright.black(`-@ Initializing...`));
@@ -121,7 +120,6 @@ require(`dotenv`).config();
         }
       }
     }
-
   }
 )().catch((err) => {
   if (err.message === `restart`) {

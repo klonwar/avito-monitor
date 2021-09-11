@@ -2,10 +2,12 @@ import TelegramBot from "node-telegram-bot-api";
 import chalk from "chalk";
 import writeFile from "#src/core/util/write-file";
 import readFile from "#src/core/util/read-file";
-import telegramDataConstructor from "#src/core/bots/telegram/telegram-data-constructor";
-import {BotStatus, StateItem} from "#src/model/task";
+import telegramDataConstructor from "#src/core/bots/telegram/util/telegram-data-constructor";
 import os from "os";
 import moment from "moment";
+import {StateItem} from "#src/core/interfaces/state-item";
+import {TELEGRAM_CONFIG} from "#src/config";
+import {BotStatus} from "#src/core/interfaces/bot-status";
 
 class TelegramClient extends TelegramBot {
   private readonly chatIdsFile = `db/chat-ids.db`;
@@ -23,7 +25,6 @@ class TelegramClient extends TelegramBot {
       {command: `/status `, description: `Show bot status`},
     ]);
 
-
     this.onText(/\/start/, async (msg) => {
       if (!this.chatIds.includes(msg.chat.id)) {
         console.log(`-@@ [${chalk.greenBright(`BOT`)}] +${msg.chat.id}`);
@@ -35,8 +36,7 @@ class TelegramClient extends TelegramBot {
     this.onText(/\/help/, async (msg) => {
       await this.sendMessage(
         msg.chat.id,
-        `I will notify you about new and changed items on Avito.\n\n` +
-        `For more information go to https://github.com/klonwar/avito-monitor`,
+        TELEGRAM_CONFIG.helpMessage,
       );
     });
 

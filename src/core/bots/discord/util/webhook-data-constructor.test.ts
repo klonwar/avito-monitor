@@ -1,7 +1,7 @@
-import webhookDataConstructor from "#src/core/bots/discord/webhook-data-constructor";
-import {ItemStatus} from "#src/model/task";
+import webhookDataConstructor from "#src/core/bots/discord/util/webhook-data-constructor";
 import {mockLink} from "#mocks/variables";
-import {WEBHOOK_CHANGED_COLOR, WEBHOOK_NEW_COLOR} from "#src/config";
+import {ItemStatus} from "#src/core/interfaces/state-item";
+import {WEBHOOK_CONFIG} from "#src/config";
 
 describe(`Webhook messages display correctly`, () => {
   const mockInfo = {
@@ -26,7 +26,7 @@ describe(`Webhook messages display correctly`, () => {
     expect(webhookData.embeds[0]).toMatchObject({
       title: `${mockInfo.title} - ${mockInfo.price}`,
       url: mockLink,
-      color: WEBHOOK_NEW_COLOR,
+      color: WEBHOOK_CONFIG.newItemColor,
       thumbnail: {
         url: mockLink
       }
@@ -63,7 +63,7 @@ describe(`Webhook messages display correctly`, () => {
     expect(webhookData.embeds[0]).toMatchObject({
       title: `${mockInfo.title} - ${mockInfo.price}`,
       url: mockLink,
-      color: WEBHOOK_CHANGED_COLOR,
+      color: WEBHOOK_CONFIG.changedColor,
       thumbnail: {
         url: mockLink
       }

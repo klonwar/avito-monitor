@@ -1,4 +1,5 @@
-import {StateItem} from "#src/model/task";
+import {StateItem} from "#src/core/interfaces/state-item";
+
 
 const isRegexException = (item: StateItem, exceptRegex: RegExp): boolean => {
   if (!exceptRegex)

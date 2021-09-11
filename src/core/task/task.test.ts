@@ -1,8 +1,9 @@
-import Task, {ItemStatus} from "./task";
+import Task from "./task";
 import {mockLink} from "#mocks/variables";
 import readFile from "#src/core/util/read-file";
 import fetchTemp from "node-fetch";
 import {FetchMockStatic} from "fetch-mock";
+import {ItemStatus} from "#src/core/interfaces/state-item";
 
 jest.mock(`node-fetch`, () => require(`fetch-mock-jest`).sandbox());
 const fetch = (fetchTemp as unknown) as (typeof fetchTemp) & FetchMockStatic;
