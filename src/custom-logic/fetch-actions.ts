@@ -58,26 +58,3 @@ export const afterRequest = async (props: AfterRequestProps, actions: AfterReque
     result.push(stateItem);
   });
 };
-
-/*
-
-    const requestParams = new URLSearchParams(`highlightPreTag=%3Cais-highlight-0000000000%3E&highlightPostTag=%3C%2Fais-highlight-0000000000%3E\`+\`&filters=(categoryid%3A1008%20OR%20categoryids%3A1008)%20%20AND%20(parentproductid%3A0%20OR%20isparenteol%3Atrue)%20AND%20(productchannel.1.published%3Atrue)&ruleContexts=%5B%22facet_category_1008%22%5D&distinct=true&maxValuesPerFacet=1000&clickAnalytics=true&query=&hitsPerPage=20&page=0&facets=%5B%22price_ag_floored%22%2C%22isnew%22%2C%22deliverydatepreorder%22%2C%22deliverydatenow%22%2C%22usedproduct%22%2C%22manufacturer%22%2C%22facets.Chipsatz.values%22%2C%22facets.GPUBasistakt.valuesDisplayOrder%22%2C%22facets.GPUBoost-Takt.valuesDisplayOrder%22%2C%22facets.%25c3%259cbertaktet.values%22%2C%22facets.Leistungsstufe.values%22%2C%22facets.Speicher%2528VRAM%2529.valuesDisplayOrder%22%2C%22facets.VRAM-Typ.values%22%2C%22facets.Busbreite.values%22%2C%22facets.Anschluss.values%22%2C%22facets.HDMI.valuesDisplayOrder%22%2C%22facets.miniHDMI.valuesDisplayOrder%22%2C%22facets.DVI.valuesDisplayOrder%22%2C%22facets.VGA.valuesDisplayOrder%22%2C%22facets.DisplayPort.valuesDisplayOrder%22%2C%22facets.miniDisplayPort.valuesDisplayOrder%22%2C%22facets.VirtualLink%2528USBTypC%2529.valuesDisplayOrder%22%2C%22facets.HDCP.values%22%2C%22facets.SLI.values%22%2C%22facets.Crossfire.values%22%2C%22facets.DirectX.values%22%2C%22facets.K%25c3%25bchlungsart.values%22%2C%22facets.K%25c3%25bchlergr%25c3%25b6sse.values%22%2C%22facets.L%25c3%25a4ngederGrafikkarte.valuesDisplayOrder%22%2C%22facets.LowProfile.values%22%2C%22facets.Beleuchtung.values%22%2C%22facets.Stromanschluss.values%22%2C%22facets.NetzteilempfehlungdesHestellers.valuesDisplayOrder%22%5D&tagFilters=&facetFilters=%5B%5B%22facets.Chipsatz.values%3ANVIDIA%C2%AE%20GeForce%C2%AE%22%5D%5D&numericFilters=%5B%22facets.Speicher%2528VRAM%2529.valuesDisplayOrder%3E%3D15%22%5D`);
-    requestParams.set(`hitsPerPage`, `100`);
-
-    const res = await (await fetch(process.env.CU_API_LINK, {
-      method: `POST`,
-      headers: {
-        "Referer": `https://www.computeruniverse.net/`,
-        "Content-Type": `application/json`
-      },
-      body: JSON.stringify({
-        requests: [{
-          indexName: `Prod-ComputerUniverse_ru`,
-          params: requestParams.toString()
-        }]
-      })
-    })).json();
-
-    console.log(res.results.map((item) => item.hits.map((item) => item)));
-
-*/

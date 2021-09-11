@@ -1,7 +1,7 @@
 import pjson from "#root/package.json";
 import {StateItem} from "#src/core/interfaces/state-item";
 
-export const BOT_NAME = `- CU Monitor v${pjson.version} -`;
+export const BOT_NAME = `- Avito Monitor v${pjson.version} -`;
 
 export const ORIGIN = `https://avito.ru/`;
 export const TIMEOUT = 10000;
