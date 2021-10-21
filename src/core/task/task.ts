@@ -32,7 +32,7 @@ class Task {
     list: Array<string>
     active: string
   };
-  private state: Array<StateItem>;
+  public state: Array<StateItem>;
   initialized = false;
   private seenIds = new Set();
 

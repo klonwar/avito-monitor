@@ -5,24 +5,27 @@ import readFile from "#src/core/util/read-file";
 import telegramDataConstructor from "#src/core/bots/telegram/util/telegram-data-constructor";
 import os from "os";
 import moment from "moment";
-import {StateItem} from "#src/core/interfaces/state-item";
-import {TELEGRAM_CONFIG} from "#src/config";
-import {BotStatus} from "#src/core/interfaces/bot-status";
+import { StateItem } from "#src/core/interfaces/state-item";
+import { TELEGRAM_CONFIG } from "#src/config";
+import Task from "#src/core/task/task";
+import { escapeMarkdown } from "#src/core/bots/telegram/util/escape-markdown";
 
 class TelegramClient extends TelegramBot {
   private readonly chatIdsFile = `db/chat-ids.db`;
   private chatIds: Array<number> = [];
-  botStatus: BotStatus[] = null;
+  private task: Task = null;
 
   constructor(token: string, options?: TelegramBot.ConstructorOptions) {
     super(token, options);
 
     this.setMyCommands([
-      {command: `/start`, description: `Start receiving notifications`},
+      {command: `/status `, description: `Show bot status`},
+      {command: `/list `, description: `Show items. \`/list all\` for all items`},
+      {command: `/available `, description: `Show available items. \`/available all\` for all available items`},
+      {command: `/ping `, description: `Check bot availability`},
       {command: `/help`, description: `Show help`},
       {command: `/memory `, description: `Show used RAM`},
-      {command: `/ping `, description: `Check bot availability`},
-      {command: `/status `, description: `Show bot status`},
+      {command: `/start`, description: `Start receiving notifications`},
     ]);
 
     this.onText(/\/start/, async (msg) => {
@@ -60,13 +63,13 @@ class TelegramClient extends TelegramBot {
     });
 
     this.onText(/\/status/, async (msg) => {
-      if (!this.botStatus)
+      if (!this.task.botStatus)
         await this.sendMessage(
           msg.chat.id,
           `Not ready yet`
         );
       else {
-        const lastDate = this.botStatus[this.botStatus.length - 1].start;
+        const lastDate = this.task.botStatus[this.task.botStatus.length - 1].start;
 
         const deltas = {
           d: moment().diff(lastDate, `days`),
@@ -83,10 +86,53 @@ class TelegramClient extends TelegramBot {
 
         await this.sendMessage(
           msg.chat.id,
-          this.botStatus.map((item) => `_${item.status}_`).join(` / `) + ` \\- ${timeLabel}`,
+          this.task.botStatus.map((item) => `_${item.status}_`).join(` / `) + ` \\- ${timeLabel}`,
           {parse_mode: `MarkdownV2`}
         );
       }
+    });
+
+    this.onText(/\/(list|available)/, async (msg) => {
+      if (!this.task.state) {
+        await this.sendMessage(
+          msg.chat.id,
+          `No list yet`
+        );
+        return;
+      }
+
+      const filteredState: StateItem[] = this.task.state;
+
+      const rows = filteredState.map(
+        (item, index) => `${index + 1}\\. [${escapeMarkdown(item.info.title)}](${item.info.link})\n` +
+          `${escapeMarkdown(item.info.price)} \n`
+      );
+
+      let answer = ``;
+      let index = -1;
+      for (const item of rows) {
+        index++;
+
+        // Не можем отправить так много символов
+        if (answer.length + item.length > 3500) {
+          const hiddenResultsCount = rows.length - index;
+          answer += `\n`;
+
+          if (hiddenResultsCount !== 0)
+            answer += `\\.\\.\\. and ${hiddenResultsCount} more`;
+          break;
+        } else {
+          answer += `\n${item}`;
+        }
+      }
+      answer += `\n🔗 Links\n`;
+      answer += `[All items](${this.task.state[0]?.listLink})`;
+
+      await this.sendMessage(
+        msg.chat.id,
+        answer,
+        {parse_mode: `MarkdownV2`, disable_web_page_preview: true}
+      );
     });
   }
 
@@ -98,6 +144,19 @@ class TelegramClient extends TelegramBot {
           .filter((item) => item.length > 0)
           .map((item) => parseInt(item))
       );
+
+      console.log(`Bot users:`);
+      for (const chatId of this.chatIds) {
+        try {
+          const chat = await this.getChat(chatId);
+          if (!chat.username)
+            console.log(chalk.blue(`no username - ${chatId}`));
+          else
+            console.log(chalk.blue(`@${chat.username}`));
+        } catch (e) {
+          console.log(`removed - ${chatId}`);
+        }
+      }
     } catch (e) {
       if (e.message.includes(`ENOENT`)) {
         await this.saveIds();
@@ -107,8 +166,8 @@ class TelegramClient extends TelegramBot {
     }
   }
 
-  setBotStatus(botStatus: BotStatus[]): void {
-    this.botStatus = botStatus;
+  setTask(task: Task): void {
+    this.task = task;
   }
 
   private async saveIds(): Promise<void> {

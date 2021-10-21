@@ -90,7 +90,7 @@ require(`dotenv`).config();
       }
     });
 
-    bot.setBotStatus(task.botStatus);
+    bot.setTask(task);
 
     // Нам необходимо инициализировать бота
     console.log(chalk.bgBlueBright.black(`-@ Initializing...`));

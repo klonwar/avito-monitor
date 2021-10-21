@@ -1,7 +1,7 @@
-import {StateItem} from "#src/core/interfaces/state-item";
-import {BotStatus} from "#src/core/interfaces/bot-status";
+import { StateItem } from "#src/core/interfaces/state-item";
+import Task from "#src/core/task/task";
 
 export interface Bot {
   sendMessage: (item: StateItem) => Promise<void>
-  setBotStatus: (status: BotStatus[]) => void
+  setTask: (task: Task) => void
 }
