@@ -184,7 +184,7 @@ class Task {
 
       const response = timeoutPromiseResponse.res;
 
-      await afterRequest({response, result, listLink: link}, {turnOnDifferentProxy: this.turnOnDifferentProxy});
+      await afterRequest({response, result, listLink: link}, {turnOnDifferentProxy: () => this.turnOnDifferentProxy()});
     }
 
     return result;
